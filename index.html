@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>はじめてガイド｜HID屋 CSサポート</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg:        #ffffff;
+    --surface:   #ffffff;
+    --surface-2: #f5f3ef;
+    --ink:       #22201c;
+    --ink-soft:  #5a544a;
+    --ink-faint: #8a8377;
+    --line:      #e5e1d8;
+    --line-soft: #efece4;
+    --accent:    #bf0000;
+    --accent-ink:#a00016;
+    --side-bg:   #2a2422;
+    --side-ink:  #d7cfc4;
+    --side-ink-soft:#a89f92;
+    --ok:        #2f8f5b;   --ok-bg:   #e9f5ee;   --ok-ink:  #1c6b41;
+    --spec:      #3b73c4;   --spec-bg: #eaf1fb;   --spec-ink:#2b5697;
+    --check:     #c8871a;   --check-bg:#fbf1dc;   --check-ink:#8a5a0e;
+    --refund:    #c1483c;   --refund-bg:#fbeae7;  --refund-ink:#9c362c;
+    --shadow: 0 1px 2px rgba(30,25,15,.05), 0 3px 12px rgba(30,25,15,.06);
+    --radius: 12px;
+    --font: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+    --mono: "SF Mono", "Consolas", "Yu Gothic", monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--font); line-height:1.75; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 28px 90px; }
+
+  .sidebar {
+    position: fixed; top:0; left:0; bottom:0; width: 254px; z-index: 40;
+    background: var(--side-bg); color: var(--side-ink);
+    display:flex; flex-direction:column; overflow-y:auto;
+    border-right: 3px solid var(--accent);
+  }
+  .brand { padding: 18px 20px; background: var(--accent); color:#fff; }
+  .brand-mark { display:block; font-size:19px; font-weight:800; letter-spacing:.02em; }
+  .brand-sub { display:block; font-size:12px; opacity:.9; margin-top:3px; letter-spacing:.05em; }
+  .side-nav { display:flex; flex-direction:column; padding:10px 0; }
+  .side-nav a {
+    display:flex; align-items:center; gap:12px; padding:8px 18px;
+    color:var(--side-ink); text-decoration:none; font-size:14.5px; font-weight:600;
+    border-left:3px solid transparent;
+  }
+  /* organ-pipe style step indicator: each row's pipe is taller than the last,
+     so the sidebar reads as a pipe-organ silhouette from top (00) to bottom (10) */
+  .side-nav a .n {
+    flex:none; width:28px; height: var(--h, 24px);
+    display:flex; align-items:flex-start; justify-content:center; padding-top:3px;
+    font-family:var(--mono); font-size:12px; font-weight:700; color:#fff;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 55%, #fff 45%) 0%, var(--accent) 55%, var(--accent-ink) 100%);
+    border-radius: 8px 8px 3px 3px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 1px 2px rgba(0,0,0,.25);
+  }
+  .side-nav a:hover { background:rgba(255,255,255,.06); color:#fff; }
+  .side-nav a.active { background: rgba(191,0,0,.22); color:#fff; border-left-color:var(--accent); }
+  .side-nav a.active .n { background: linear-gradient(180deg, #fff 0%, var(--accent) 60%, var(--accent-ink) 100%); color:var(--accent-ink); }
+  .main { margin-left: 254px; }
+
+  @media (max-width: 860px) {
+    .sidebar { position:static; width:auto; border-right:none; border-bottom:3px solid var(--accent); }
+    .side-nav { flex-direction:row; flex-wrap:wrap; padding:8px; gap:4px; }
+    .side-nav a { border-left:none; border-radius:6px; padding:6px 10px; }
+    .side-nav a.active { border-left:none; }
+    .side-nav a .n { height:26px !important; padding-top:5px; }
+    .main { margin-left:0; }
+    .wrap { padding: 0 16px 60px; }
+  }
+
+  header { padding: 44px 0 26px; margin-bottom: 6px; border-bottom: 2px solid var(--line); }
+  .eyebrow { font-size:13px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent-ink); font-weight:700; margin:0 0 10px; }
+  h1 { font-size: clamp(28px,4.6vw,42px); line-height:1.3; margin:0 0 12px; font-weight:800; }
+  .lede { font-size:17px; color:var(--ink-soft); max-width: 64ch; margin:0; }
+  .badge3 { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+  .badge3 span { background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-size:14px; font-weight:700; color:var(--ink-soft); }
+
+  section { margin-top: 44px; scroll-margin-top: 18px; }
+  section.acc { border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow); padding: 18px 22px; }
+  .sec-head { display:flex; align-items:baseline; gap:12px; margin:0; cursor:pointer; user-select:none; }
+  .sec-head:hover h2 { color:var(--accent-ink); }
+  .sec-no { font-family:var(--mono); font-size:15px; font-weight:700; color:var(--accent-ink); background:var(--surface-2); border:1px solid var(--line); border-radius:7px; padding:3px 9px; flex:none; }
+  h2 { font-size: clamp(21px,2.8vw,25px); margin:0; font-weight:800; }
+  .chev { margin-left:auto; flex:none; font-size:16px; color:var(--ink-faint); transition: transform .2s ease; }
+  section.acc.open > .sec-head .chev { transform: rotate(180deg); color:var(--accent-ink); }
+  .sec-body { display:none; margin-top:18px; }
+  section.acc.open > .sec-body { display:block; animation: acc-in .18s ease; }
+  @keyframes acc-in { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform:none; } }
+  .sec-sub { font-size:15px; color:var(--ink-soft); margin:2px 0 0; }
+  .acc-hint { font-size:13px; color:var(--ink-faint); margin:10px 0 0; }
+
+  /* flow diagram */
+  .flow { display:flex; flex-direction:column; gap:0; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+  .fstep { display:flex; gap:16px; padding:16px 20px; border-bottom:1px solid var(--line-soft); align-items:flex-start; }
+  .fstep:last-child { border-bottom:none; }
+  .fstep.pause { background: var(--check-bg); }
+  .fstep.op { background: var(--surface-2); }
+  .fnum { flex:none; width:32px; height:32px; border-radius:50%; background:var(--accent); color:#fff; font-weight:800; font-size:14.5px; display:grid; place-items:center; }
+  .fstep.pause .fnum { background: var(--check); }
+  .fstep.op .fnum { background: var(--ink-faint); }
+  .fbody b { font-size:16.5px; }
+  .fbody ul { margin:6px 0 0; padding-left:18px; }
+  .fbody li { font-size:15px; color:var(--ink-soft); margin-bottom:3px; }
+  .fbody .stopflag { display:inline-block; margin-left:8px; font-size:12.5px; font-weight:800; color:var(--check-ink); background:#fff; border:1px solid color-mix(in srgb, var(--check) 40%, transparent); border-radius:5px; padding:1px 7px; }
+
+  .why { margin-top:14px; padding:12px 16px; background:var(--spec-bg); color:var(--spec-ink); border:1px solid color-mix(in srgb, var(--spec) 28%, transparent); border-radius:10px; font-size:15px; }
+  .why b { font-weight:800; }
+
+  .card3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:4px; }
+  @media (max-width:760px){ .card3{ grid-template-columns:1fr; } }
+  .p { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:14px 16px; box-shadow:var(--shadow); font-size:15px; color:var(--ink-soft); }
+  .p b { color:var(--ink); display:block; margin-bottom:4px; font-size:15.5px; }
+
+  .rule-block { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px 20px; margin-bottom:14px; }
+  .rule-block h3 { margin:0 0 8px; font-size:17px; font-weight:800; }
+  .rule-block p, .rule-block li { font-size:15.5px; color:var(--ink-soft); }
+  .rule-block ul { margin:6px 0; padding-left:20px; }
+  .rule-block .test { margin-top:10px; padding:11px 14px; background:var(--surface-2); border-radius:9px; font-size:15px; }
+  .yn { display:flex; gap:10px; margin-top:8px; flex-wrap:wrap; }
+  .yn span { font-size:14px; font-weight:700; padding:5px 11px; border-radius:8px; border:1px solid; }
+  .yn .no { background:var(--refund-bg); color:var(--refund-ink); border-color:color-mix(in srgb, var(--refund) 28%, transparent); }
+  .yn .yes { background:var(--ok-bg); color:var(--ok-ink); border-color:color-mix(in srgb, var(--ok) 30%, transparent); }
+
+  table.rule { width:100%; border-collapse:collapse; font-size:15px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); }
+  table.rule th, table.rule td { text-align:left; padding:10px 14px; border-bottom:1px solid var(--line-soft); }
+  table.rule th { font-weight:700; color:var(--ink-soft); font-size:13.5px; letter-spacing:.03em; background:var(--surface-2); }
+  table.rule tr:last-child td { border-bottom:none; }
+
+  .note { background:var(--check-bg); border:1px solid color-mix(in srgb, var(--check) 30%, transparent); border-radius:10px; padding:13px 17px; font-size:15.5px; color:var(--check-ink); display:flex; gap:10px; align-items:flex-start; margin:10px 0; }
+  .note .ic { flex:none; font-weight:800; }
+  .note b { font-weight:800; }
+
+  .checklist { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+  .checklist li { list-style:none; display:flex; gap:12px; padding:12px 18px; border-bottom:1px solid var(--line-soft); font-size:15.5px; align-items:flex-start; }
+  .checklist li:last-child { border-bottom:none; }
+  .checklist li::before { content:"⚠"; flex:none; color:var(--check-ink); font-weight:800; }
+  .checklist { margin:0; padding:0; }
+  .checklist ul { margin:0; padding:0; }
+
+  .toolgrid { display:grid; grid-template-columns:1fr; gap:10px; }
+  .tool { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:13px 16px; box-shadow:var(--shadow); font-size:15.5px; }
+  .tool b { display:block; margin-bottom:3px; font-size:16px; }
+  .tool span { color:var(--ink-soft); }
+
+  .maplist { display:flex; flex-direction:column; gap:8px; }
+  .maprow { display:flex; gap:14px; padding:12px 16px; background:var(--surface); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); font-size:15px; align-items:flex-start; }
+  .maprow .fname { flex:none; width:230px; font-weight:700; color:var(--accent-ink); }
+  .maprow .fname a { color:inherit; text-decoration:none; border-bottom:1px dashed color-mix(in srgb, var(--accent) 40%, transparent); }
+  .maprow .fdesc { color:var(--ink-soft); }
+  @media (max-width:700px){ .maprow{ flex-direction:column; } .maprow .fname{ width:auto; } }
+
+  .final { background: var(--side-bg); color: var(--side-ink); border-radius: var(--radius); padding: 26px 26px; margin-top:14px; }
+  .final h3 { color:#fff; margin:0 0 12px; font-size:18px; }
+  .final ol { margin:0; padding-left:20px; }
+  .final li { margin-bottom:8px; font-size:15.5px; }
+  .final b { color:#fff; }
+
+  footer { margin-top:60px; padding-top:18px; border-top:1px solid var(--line); font-size:13px; color:var(--ink-faint); }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="brand">
+    <span class="brand-mark">HID屋 CSサポート</span>
+    <span class="brand-sub">はじめてガイド</span>
+  </div>
+  <div class="side-nav">
+    <a href="#s0"><span class="n" style="--h:22px">00</span>3行まとめ</a>
+    <a href="#s1"><span class="n" style="--h:25px">01</span>全体の流れ</a>
+    <a href="#s2"><span class="n" style="--h:28px">02</span>大原則</a>
+    <a href="#s3"><span class="n" style="--h:31px">03</span>保証・販路・不良交換</a>
+    <a href="#s4"><span class="n" style="--h:34px">04</span>伝票の要注意点</a>
+    <a href="#s5"><span class="n" style="--h:37px">05</span>メールの注意</a>
+    <a href="#s6"><span class="n" style="--h:40px">06</span>責任者確認案件</a>
+    <a href="#s7"><span class="n" style="--h:43px">07</span>商品知識の確認先</a>
+    <a href="#s8"><span class="n" style="--h:46px">08</span>使うツール</a>
+    <a href="#s9"><span class="n" style="--h:49px">09</span>資料マップ</a>
+    <a href="#s10"><span class="n" style="--h:52px">10</span>最初の1週間</a>
+  </div>
+</nav>
+
+<div class="main">
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">HID屋 CSサポート — Onboarding</p>
+    <h1>はじめてガイド</h1>
+    <p class="lede">CS対応に初めて参加する人が、まず全体の流れと勘所をつかむための資料です。詳細ルールはすべて <code>業務ルール.md</code> にあります。このガイドは「地図」、<code>業務ルール.md</code>は「詳しい地誌」だと思ってください。迷ったら地図（このガイド）→ 地誌（業務ルール.md）の順で戻ってきましょう。</p>
+    <div class="badge3">
+      <span>対象：CS対応チーム新規参加者</span>
+      <span>参照元：業務ルール.md / 不良交換オペレーション手順.md</span>
+    </div>
+    <p class="acc-hint">▾ 各項目の見出し（または左のサイドバー）をクリックすると、中身が開いたり閉じたりします。</p>
+  </header>
+
+  <section id="s0" class="acc">
+    <div class="sec-head" onclick="toggleSec('s0')"><span class="sec-no">00</span><h2>最初に知っておくこと（3行で）</h2><span class="chev">&#9662;</span></div>
+    <div class="sec-body">
+    <div class="card3">
+      <div class="p"><b>①分析 →②伝票（停止）→③メール</b>この順で進む。伝票が固まってからメールを作る。</div>
+      <div class="p"><b>メールより伝票が先</b>下書きを先に出さない。オペレーターから合図があるときだけ例外。</div>
+      <div class="p"><b>テンプレはそのまま使う</b>言い換え・要約・自己流アレンジはしない。</div>
+    </div>
+    </div>
+  </section>
+
+  <section id="s1" class="acc">
+    <div class="sec-head" onclick="toggleSec('s1')"><span class="sec-no">01</span><h2>全体の流れ（標準フロー）</h2><span class="chev">&#9662;</span></div>
+    <div class="sec-body">
+    <div class="flow">
+      <div class="fstep">
+        <div class="fnum">1</div>
+        <div class="fbody">
+          <b>①分析を出力</b>
+          <ul>
+            <li>販路／注文番号の形式で本人確認</li>
+            <li>保証期間内か（受注日基準）を確認</li>
+            <li>片側／両側の症状で「不良交換」か「相性問題」かを見立てる</li>
+            <li>商品名はNEで確定させる（記憶で書かない）</li>
+            <li>ルールに書かれていない・判断が分かれる点は ⚠️ で明示し、勝手に決めない</li>
+          </ul>
+        </div>
+      </div>
+      <div class="fstep pause">
+        <div class="fnum">2</div>
+        <div class="fbody">
+          <b>②伝票チェック表を作成<span class="stopflag">ここで一旦停止</span></b>
+          <ul>
+            <li>表形式＋「なぜそうするか」の根拠（ルールの章番号）を書く</li>
+            <li>不良交換オペレーション手順.md §4 の手順に沿っているか確認</li>
+            <li>DS/SE・四天王商品（DS D2S・DS D4S・L1B 2色・Vシリーズ2色）は画像確認を特に念入りに</li>
+          </ul>
+        </div>
+      </div>
+      <div class="fstep op">
+        <div class="fnum">–</div>
+        <div class="fbody"><b>オペレーターが実際にNEで伝票を作成・処理する</b></div>
+      </div>
+      <div class="fstep">
+        <div class="fnum">3</div>
+        <div class="fbody">
+          <b>③処理完了の合図を受けてからメール返信を作成</b>
+          <ul>
+            <li>該当テンプレがあれば原文そのまま（差し込みだけ）</li>
+            <li>トーンは丁寧・謝意先行・低姿勢で統一</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="why"><b>なぜこの順番か：</b> 伝票（NE操作）は取り消しにくく、事故（保証タグ漏れ・二重発送など）が起きやすい作業です。先にメールを送ってしまうと、伝票側で問題が見つかったときに「もう案内してしまった」状態になり後戻りしにくくなります。だから伝票を先に固めてから、メールを作る順序になっています。例外（メールを先に、等）は<b>オペレーターから明示的に合図があった場合のみ</b>です。</div>
+    </div>
+  </section>
+
+  <section id="s2" class="acc">
+    <div class="sec-head" onclick="toggleSec('s2')"><span class="sec-no">02</span><h2>何があっても外さない大原則</h2><span class="chev">&#9662;</span></div>
+    <div class="sec-body">
+
+    <div class="rule-block">
+      <h3>大原則0：テンプレがあるなら、テンプレをそのまま使う</h3>
+      <p>該当するテンプレートがある問い合わせは、その本文を<b>そのまま</b>採用し、担当者名・注文番号・宛先などの差し込み部分だけを埋めます。「もっとわかりやすく」という善意のリライトはしません。テンプレはすでに責任範囲・言い回しが精査済みのものです。カスタムで文章を作るのは、<b>該当テンプレが無い場合</b>か<b>複数のテンプレを組み合わせる必要がある場合</b>だけです。</p>
+    </div>
+
+    <div class="rule-block">
+      <h3>B-1方針：適合確認・商品選定には個別回答をしない</h3>
+      <p>「この車に合いますか？」「他に何が合いますか？」という質問には、具体的な商品名・型番・URLで答えません。実車のバルブ形式確認 → 適合表 → 商品ページでの自己選定、という流れに案内します。車種・年式・グレード・装着状況によって答えが変わり、外れた時に混乱と責任問題を生むためです。</p>
+      <div class="test">
+        判断に迷ったときのテスト：<br>
+        「取扱の有無を伝えることが、お客様の車両・状況に依存する“個別判断”に踏み込むことになるか？」
+        <div class="yn">
+          <span class="no">YES（車によって変わる）→ 言わずに自己確認へ誘導</span>
+          <span class="yes">NO（車に関係ない普遍的事実）→ 事実として伝えてよい</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rule-block">
+      <h3>トーンの原則</h3>
+      <p>相手のためになること（事実・手順）だけを伝え、「なぜダメか」の説明で相手を否定・説教しない。詳しくは <code>業務ルール.md</code> §11。</p>
+    </div>
+    </div>
+  </section>
+
+  <section id="s3" class="acc">
+    <div class="sec-head" onclick="toggleSec('s3')"><span class="sec-no">03</span><h2>判断の土台：保証・販路・不良交換</h2><span class="chev">&#9662;</span></div>
+    <div class="sec-body">
+    <p class="sec-sub">初めのうちに押さえておきたい最重要ポイントだけを抜粋。詳細は必ず業務ルール.mdの該当章で確認してください。</p>
+
+    <div class="rule-block">
+      <h3>保証（詳細：業務ルール.md §1）</h3>
+      <ul>
+        <li><b>LED：2025年3月1日以降のご購入 → 2年保証。</b>それ以前は1年。</li>
+        <li><b>HID：1年保証</b>（受注時期によらず一律）。</li>
+        <li>保証は<b>注文番号</b>に紐づく。保証書という書類は発行していない。</li>
+        <li>配送伝票（ヤマト送り状）にあるのは「追跡番号」で「注文番号」ではない。混同しやすいので注意。</li>
+      </ul>
+    </div>
+
+    <div class="rule-block">
+      <h3>販路の見分け方（詳細：業務ルール.md §2）</h3>
+      <table class="rule">
+        <tr><th>販路</th><th>注文番号の形式</th></tr>
+        <tr><td>自社サイト</td><td><code>1000</code>始まり12桁（旧<code>900</code>始まり）</td></tr>
+        <tr><td>楽天</td><td><code>269833</code>(店番)-日付-識別番号</td></tr>
+        <tr><td>Yahoo・ヤフオク</td><td><code>10</code>始まり8桁</td></tr>
+        <tr><td>メルカリ</td><td>英数字混在</td></tr>
+        <tr><td><code>order_</code>始まり</td><td>先頭の「order_」を除いた文字列で検索</td></tr>
+      </table>
+      <p style="margin-top:10px;"><b>Amazonは要注意：</b>販売元が「トレーディングトレード」「HID屋」でなければ転売品・アウトレットの可能性が高く、原則保証不可。</p>
+    </div>
+
+    <div class="rule-block">
+      <h3>不良交換の基本判断（詳細：業務ルール.md §3）</h3>
+      <ul>
+        <li><b>片側の不具合</b> → 不良の可能性が高い → <b>不良交換</b>で対応。</li>
+        <li><b>両側の不具合</b> → 不良の可能性は低い（バルブは1球ずつ作られており両方同時に壊れるのは考えにくい）→ 車との相性（電圧・電装系）や不適合の可能性 → <b>別商品（別シリーズ）を提案</b>。</li>
+        <li>お客様が「片側」と言っていても、実際は両側のことがあるので注意。</li>
+        <li>純正交換品の両側不点灯は例外：形式適合品なので相性より「バルブ形式の勘違い」を先に疑う。</li>
+      </ul>
+    </div>
+
+    <div class="rule-block">
+      <h3>旧⇔新バージョンの判定（詳細：業務ルール.md §3「旧⇔新バージョンの判定原則」）</h3>
+      <ul>
+        <li><b>片側・初回</b> → 旧→旧（1球）。</li>
+        <li><b>片側が連続（再発）・両側</b> → 旧→新（片側でも2球、左右を新版に揃える）。</li>
+        <li>「連続（再発）」かどうかは<b>前回交換からの経過期間</b>で判断する（間もなくなら旧→新、十分な期間問題なければ旧→旧でも可）。境界的な場合は⚠️で示し責任者に確認。</li>
+      </ul>
+    </div>
+    </div>
+  </section>
+
+  <section id="s4" class="acc">
+    <div class="sec-head" onclick="toggleSec('s4')"><span class="sec-no">04</span><h2>伝票チェック表を作るときに絶対に見る場所</h2><span class="chev">&#9662;</span></div>
+    <div class="sec-body">
+    <p class="sec-sub">伝票作成は事故（保証タグ漏れ・元伝票の誤操作・お詫び品の二重発送・売単価の消し忘れ等）が起きやすい作業です。必ず業務ルール.md §3.6 伝票作成チェックリストを上から順に潰しながら進めてください。ここでは、初めての人がつまずきやすいポイントだけ挙げます。</p>
+    <ul class="checklist">
+      <li>伝票作成の直前に、NE＞詳細検索＞受注番号（前方一致）で、他の担当者がすでに交換品を送っていないか確認する。にこちゃんマークだけでは、同一人物が別のメールIDで複数回問い合わせてきたケースを拾えません。</li>
+      <li>チャネルで起票方法が違う。自社・楽天・Yahoo等は「複写処理」、<b>Amazonは複写せず「新規作成」</b>。</li>
+      <li>受注分類タグは常に空欄。不良交換はチャネルによらず全て空欄です（Amazonも例外なし）。</li>
+      <li>店舗の選び方：同一商品・同一シリーズ内の交換 →「8 不良交換」／別シリーズやバージョンアップ（新版）への交換 →「25 その他」＋作業用欄に理由。「25 その他」の場合は片側交換でも両側2球の写真が必要になります。</li>
+      <li>お詫び品T10aは同一受注番号につき1回だけ。二重に付けない。</li>
+      <li>元の発送商品（購入品の行）を「c」＝キャンセルにする。消し忘れると二重出荷になります。</li>
+    </ul>
+    </div>
+  </section>
+
+  <section id="s5" class="acc">
+    <div class="sec-head" onclick="toggleSec('s5')"><span class="sec-no">05</span><h2>メールを作るときの注意</h2><span class="chev">&#9662;</span></div>
+    <div class="sec-body">
+    <div class="rule-block">
+      <ul>
+        <li>テンプレ利用処理でテンプレを選び、差し込み・必要な箇所の編集を行う（業務ルール.md §10）。</li>
+        <li><code>-お送り商品-</code> の商品名は、NEで伝票を作成したときの商品名と<b>一字一句そのまま</b>にする（略称・言い換え厳禁）。</li>
+        <li>発払い／ネコポスの不良交換テンプレは、球数（1球・2球）や注意事項（配線切断／チップ×印／セラミックチューブ黒塗り）を商品の実態に合わせて<b>該当しない行を削除</b>してから送る。詳細は業務ルール.md §3の「文言選択ルール」。</li>
+        <li>同じ語尾（「申し訳ございません」等）を近くで繰り返さない。</li>
+      </ul>
+    </div>
+    </div>
+  </section>
+
+  <section id="s6" class="acc">
+    <div class="sec-head" onclick="toggleSec('s6')"><span class="sec-no">06</span><h2>自己判断せず責任者に確認する案件</h2><span class="chev">&#9662;</span></div>
+    <div class="sec-body">
+    <p class="sec-sub">詳細：業務ルール.md §3.5。以下は勝手に約束しない。金額・保険・特殊対応が絡むため、責任者に確認してから動きます。</p>
+    <div class="note"><span class="ic">⚠</span><div>
+      保証期間切れで「なんとかしてほしい」と言われたとき／工賃を保証してほしいと言われたとき／ヘッドライトユニットが溶けた（保険対応案件・電話対応）／原型を留めない加工が必要なとき／グレア（眩しすぎる）の相談で明るさを下げる提案に慣れていないとき／両側や繰り返しの不具合で原因の切り分けに迷うとき
+    </div></div>
+    <p style="font-size:15.5px; color:var(--ink-soft);">判断に迷ったときは、<b>⚠️をつけて明示し、自己判断で進めない</b>のが基本姿勢です（業務ルール.md 全体を通しての原則）。</p>
+    </div>
+  </section>
+
+  <section id="s7" class="acc">
+    <div class="sec-head" onclick="toggleSec('s7')"><span class="sec-no">07</span><h2>商品知識はどこで確認するか</h2><span class="chev">&#9662;</span></div>
+    <div class="sec-body">
+    <p class="sec-sub">記憶や思い込みで答えず、都度、商品ページ相当のデータで確認します。</p>
+    <div class="maplist">
+      <div class="maprow"><div class="fname"><a href="../商品情報/0.ProductDB/README.md">商品情報/0.ProductDB/</a></div><div class="fdesc">全シリーズの商品データベース。まず「シリーズ比較表.md」で横断比較し、シリーズが分かっていればそのシリーズの詳細ファイルを開く。</div></div>
+      <div class="maprow"><div class="fname"><a href="学習ドリル/index.html">学習ドリル一覧</a></div><div class="fdesc">全12シリーズ分、穴埋め問題形式の学習教材（画像付き）。まずはここから慣れるのがおすすめ。</div></div>
+      <div class="maprow"><div class="fname"><a href="../商品新旧対応表.md">商品新旧対応表.md</a></div><div class="fdesc">旧SKU→現行SKUの対応表。</div></div>
+      <div class="maprow"><div class="fname">在庫表（NE）</div><div class="fdesc">在庫・現行コードの正の情報源。商品新旧対応表と食い違ったら在庫表を優先する。</div></div>
+    </div>
+    </div>
+  </section>
+
+  <section id="s8" class="acc">
+    <div class="sec-head" onclick="toggleSec('s8')"><span class="sec-no">08</span><h2>使うツール一覧（入口だけ）</h2><span class="chev">&#9662;</span></div>
+    <div class="sec-body">
+    <div class="toolgrid">
+      <div class="tool"><b>メールディーラー</b><span>問い合わせの受信・返信作業。流れは本ガイド §5、詳細は業務ルール.md §10。</span></div>
+      <div class="tool"><b>ネクストエンジン（NE）</b><span>受注・伝票操作全般。「受注 ＞ 受注伝票管理 ＞ 検索／詳細検索」で注文番号から該当伝票を探す。伝票作成は本ガイド §4・業務ルール.md §3.6 準拠。</span></div>
+      <div class="tool"><b>Amazon管理画面（セラーセントラル）</b><span>Amazon経由の注文確認。「注文 ＞ 注文管理」で販売元やFBA/返品ステータスを確認。</span></div>
+      <div class="tool"><b>不良画像のGoogleドライブ</b><span><code>hidya.japan@gmail.com</code> でログインし「不良画像」で検索。当月の月別フォルダを使う。四天王（DS D2S／DS D4S／L1B 2色／Vシリーズ2色）はお客様が送ってきたファイル名のまま専用フォルダへ、それ以外は「その他」フォルダへ商品コードにリネームして保存。</span></div>
+    </div>
+    </div>
+  </section>
+
+  <section id="s9" class="acc">
+    <div class="sec-head" onclick="toggleSec('s9')"><span class="sec-no">09</span><h2>資料マップ（どこに何が書いてあるか）</h2><span class="chev">&#9662;</span></div>
+    <div class="sec-body">
+    <div class="maplist">
+      <div class="maprow"><div class="fname"><a href="../業務ルール.md">業務ルール.md</a></div><div class="fdesc">判断基準のすべて。保証・販路・不良交換・伝票チェックリスト・トーンのルール等。迷ったらまずここ。</div></div>
+      <div class="maprow"><div class="fname"><a href="../不良交換オペレーション手順.md">不良交換オペレーション手順.md</a></div><div class="fdesc">不良交換のNE操作を含む実務手順（フローチャート付き）。</div></div>
+      <div class="maprow"><div class="fname"><a href="../不良交換・返品交換基準ガイド.html">不良交換・返品交換基準ガイド.html</a> / <a href="../不良交換フロー.html">不良交換フロー.html</a></div><div class="fdesc">不良交換・返品の判断基準をビジュアルにまとめたガイド。</div></div>
+      <div class="maprow"><div class="fname"><a href="../商品情報/0.ProductDB/README.md">商品情報/0.ProductDB/</a></div><div class="fdesc">全12シリーズの商品データベース（明るさ・仕様・不適合車種など）。</div></div>
+      <div class="maprow"><div class="fname"><a href="../商品新旧対応表.md">商品新旧対応表.md</a></div><div class="fdesc">旧SKU→現行SKUの対応表。</div></div>
+      <div class="maprow"><div class="fname"><a href="学習ドリル/index.html">学習ドリル一覧</a></div><div class="fdesc">全12シリーズ分、穴埋め問題形式の学習教材。</div></div>
+      <div class="maprow"><div class="fname">応答テンプレート/</div><div class="fdesc">メール返信で使うテンプレート本体（107件）。</div></div>
+    </div>
+    </div>
+  </section>
+
+  <section id="s10" class="acc">
+    <div class="sec-head" onclick="toggleSec('s10')"><span class="sec-no">10</span><h2>最初の1週間、これだけは覚える</h2><span class="chev">&#9662;</span></div>
+    <div class="sec-body">
+    <div class="final">
+      <h3>7つのチェックポイント</h3>
+      <ol>
+        <li>フローは「<b>①分析 → ②伝票（停止）→ ③メール</b>」の順。</li>
+        <li>テンプレがあれば言い換えず、<b>そのまま</b>使う。</li>
+        <li>適合確認・商品選定は<b>個別回答しない</b>（B-1）。</li>
+        <li>保証は<b>注文番号</b>基準。追跡番号と混同しない。</li>
+        <li>片側＝不良交換、両側＝相性の可能性（別シリーズ提案）が基本の型。</li>
+        <li>伝票を起こす前に、<b>受注番号の前方一致検索</b>で重複対応がないか必ず確認する。</li>
+        <li>迷ったら<b>⚠️で明示</b>して、自分で決めずに確認する。</li>
+      </ol>
+    </div>
+    <p style="margin-top:14px; font-size:15.5px; color:var(--ink-soft);">この7つに慣れてきたら、業務ルール.mdを通しで読み、各章の根拠と例外パターンを押さえていってください。</p>
+    </div>
+  </section>
+
+  <footer>HID屋 CSサポート内部資料 ／ 出典：業務ルール.md・不良交換オペレーション手順.md</footer>
+
+</div>
+</div>
+
+<script>
+  function toggleSec(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('open');
+  }
+
+  const links = document.querySelectorAll('.side-nav a');
+  const sections = Array.from(links).map(a => document.querySelector(a.getAttribute('href')));
+
+  // clicking a sidebar item opens (doesn't close) the target section, then lets the
+  // browser's normal anchor-jump smooth-scroll to it
+  links.forEach((a, i) => {
+    a.addEventListener('click', () => {
+      const s = sections[i];
+      if (s) s.classList.add('open');
+    });
+  });
+
+  function onScroll() {
+    let idx = 0;
+    const y = window.scrollY + 100;
+    sections.forEach((s, i) => { if (s && s.offsetTop <= y) idx = i; });
+    links.forEach((a, i) => a.classList.toggle('active', i === idx));
+  }
+  document.addEventListener('scroll', onScroll);
+  onScroll();
+</script>
+</body>
+</html>
